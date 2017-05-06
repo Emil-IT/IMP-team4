@@ -20,7 +20,7 @@ advertise_service( serverSocket, "rpiBluetoothServer",
                    service_classes = [ uuid, SERIAL_PORT_CLASS ],
                    profiles = [ SERIAL_PORT_PROFILE ], 
                     )
-                   
+
 print("Waiting for connection on RFCOMM channel %d" % port)
 
 clientSocket, clientInfo = serverSocket.accept()
@@ -33,6 +33,7 @@ try:
             print("Closing socket")
             clientSocket.close()
             serverSocket.close()
+            quit()
         clientSocket.send(data)
         data = clientSocket.recv(size)
         if data:
