@@ -1,4 +1,5 @@
 import bluetooth
+from _thread import start_new_thread
 
 def setupConnection():
     serverSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
@@ -51,8 +52,17 @@ def main():
         pass
 
     print("disconnected")
-    closeSockets(serverSocket, clientSocket)
+    clientSocket.close()
     print("all done")
+    return
+
 
 if __name__ == "__main__":
-    main()
+    serverSocket, port = setupConnection()
+    while True:
+        print("Waiting for connection on RFCOMM channel %d" % port)
+        clientSocket, clientInfo = serverSocket.accept()
+        print("Accepted connection from ", clientInfo)
+        start_new_thread(talkToClient, (clientSocket, clientInfo))
+
+    serverSocket.close()
