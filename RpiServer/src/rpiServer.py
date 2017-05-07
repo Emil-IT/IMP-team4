@@ -27,7 +27,7 @@ def closeSockets(s, c):
 def CloseSockets(c):
     c.close()
 
-def talkToClient():
+def talkToClient(clientSocket, clientInfo):
     size = 1024
     try:
         print('Type help for a list of commands\n')
@@ -38,9 +38,9 @@ def talkToClient():
 
             elif(data == 'q'):
                 clientSocket.send(data)
-                print("Closing socket")
+                print("Closing  client and server sockets")
                 clientSocket.close()
-                return
+                return -1
             else:
                 clientSocket.send(data)
                 data = clientSocket.recv(size)
@@ -61,6 +61,10 @@ if __name__ == "__main__":
         print("Waiting for connection on RFCOMM channel %d" % port)
         clientSocket, clientInfo = serverSocket.accept()
         print("Accepted connection from ", clientInfo)
-        start_new_thread(talkToClient, (clientSocket, clientInfo))
+        returnValue = talkToClient(clientSocket, clientInfo)
+        #start_new_thread(talkToClient, (clientSocket, clientInfo))
+        if(returnValue == -1):
+            break
+        
 
     serverSocket.close()
