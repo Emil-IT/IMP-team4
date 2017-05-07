@@ -17,32 +17,30 @@ def setupConnection():
                        profiles=[bluetooth.SERIAL_PORT_PROFILE],
                         )
 
-    print("Waiting for connection on RFCOMM channel %d" % port)
-
-    clientSocket, clientInfo = serverSocket.accept()
-    print("Accepted connection from ", clientInfo)
-    return clientSocket, serverSocket
+    
+    return serverSocket, port
 
 def closeSockets(s, c):
     s.close()
     c.close()
+    
+def CloseSockets(c):
+    c.close()
 
-
-def main():
-
-    clientSocket, serverSocket = setupConnection()
+def talkToClient():
     size = 1024
-
     try:
+        print('Type help for a list of commands\n')
         while True:
-            data = input('Type help for a list of commands\n>>')
+            data = input('>>')
             if(data == 'help'):
                 print()
 
             elif(data == 'q'):
+                clientSocket.send(data)
                 print("Closing socket")
-                closeSockets(serverSocket, clientSocket)
-                quit()
+                clientSocket.close()
+                return
             else:
                 clientSocket.send(data)
                 data = clientSocket.recv(size)
