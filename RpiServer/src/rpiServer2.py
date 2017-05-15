@@ -26,7 +26,6 @@ class RpiServer(object):
         ws.start()
         bt.start()
         print('threads started')
-        callbackQueue.put('hi')
         self.listenToChildren()
 
         ws.join()
@@ -37,17 +36,19 @@ class RpiServer(object):
     def listenToChildren(self):
         while True:
             print('Ready to listen to children')
-            print(list(callbackQueue.queue))
             try:
-                item = callbackQueue.get(True, 1) #doesn't block
+                item = callbackQueue.get()
                 print('Doing work on task: ', item)
                 if(hasattr(self, item[0])):
                     getattr(self, item[0], None)(*tuple(item[1:]))
                     callbackQueue.task_done()
+                else:
+                    print('no such function')
             except queue.Empty:
                 pass
 
-    def redirectMesage(self, message, clientSocket, robotSocket):
+    def redirectMessage(self, message, clientSocket, robotSocket):
+        print('In redirect message')
         print(message, clientSocket, robotSocket)
 
 
@@ -116,7 +117,7 @@ class RpiServer(object):
         serverBTSocket.close()
 
     @asyncio.coroutine
-    def hello(websocket, path):
+    def hello(self, websocket, path):
         print('Connected by ', websocket)
         function, argList = Decoder.Decoder.decode(path)
         print('function=' + function)
@@ -142,7 +143,8 @@ class RpiServer(object):
             print('putting ', item, 'in the queue')
             callbackQueue.put(item)
             greeting = "Hello {}!".format(name)
-            yield from 
+            yield from websocket.send(str(greeting))
+            print("> {}".format(greeting))
 
     
 
