@@ -88,7 +88,7 @@ class RpiServer(object):
     def setupWSConnection(self):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        start_server = websockets.serve(websocketServer.hello, pi, 1234)
+        start_server = websockets.serve(self.hello, pi, 1234)
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
 
@@ -114,6 +114,35 @@ class RpiServer(object):
             if(returnValue == -1):
                 break
         serverBTSocket.close()
+
+    @asyncio.coroutine
+    def hello(websocket, path):
+        print('Connected by ', websocket)
+        function, argList = Decoder.Decoder.decode(path)
+        print('function=' + function)
+        print('arguments=' + str(argList))
+        if argList is None:
+            argList = []
+        if(hasattr(functions.Functions, function)):
+            greeting = getattr(functions.Functions, function)(*tuple([val[1] for val in argList]))
+        else:
+            greeting = 'No such function'
+        
+        #name = yield from websocket.recv()
+        #print("< {}".format(name))
+
+        #greeting = "Hello {}!".format(name)
+        print('Greeting='+str(greeting))
+        yield from websocket.send(str(greeting))
+        #print("> {}".format(greeting))
+        while True:
+            name = yield from websocket.recv()
+            print("< {}".format(name))
+            item = ('redirectMessage', name, websocket, 0)
+            print('putting ', item, 'in the queue')
+            callbackQueue.put(item)
+            greeting = "Hello {}!".format(name)
+            yield from 
 
     
 
