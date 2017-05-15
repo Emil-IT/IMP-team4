@@ -26,6 +26,7 @@ class RpiServer(object):
         ws.start()
         bt.start()
         print('threads started')
+        callbackQueue.put('hi')
         self.listenToChildren()
 
         ws.join()
@@ -36,12 +37,15 @@ class RpiServer(object):
     def listenToChildren(self):
         while True:
             print('Ready to listen to children')
-            item = callbackQueue.get()
-            print('Doing work on task: ', item)
-            function = getattr(self, item[0], None)
-            if(functions != None):
-                function(*tuple(item[1:]))
-            callbackQueue.task_done()
+            print(list(callbackQueue.queue))
+            try:
+                item = callbackQueue.get(True, 1) #doesn't block
+                print('Doing work on task: ', item)
+                if(hasattr(self, item[0])):
+                    getattr(self, item[0], None)(*tuple(item[1:]))
+                    callbackQueue.task_done()
+            except queue.Empty:
+                pass
 
     def redirectMesage(self, message, clientSocket, robotSocket):
         print(message, clientSocket, robotSocket)

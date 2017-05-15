@@ -41,7 +41,9 @@ def hello(websocket, path):
     while True:
         name = yield from websocket.recv()
         print("< {}".format(name))
-        rpiServer2.callbackQueue.put(('redirectMessage', name, websocket, 0))
+        item = ('redirectMessage', name, websocket, 0)
+        print('putting ', item, 'in the queue')
+        rpiServer2.callbackQueue.put(item)
         greeting = "Hello {}!".format(name)
         yield from websocket.send(str(greeting))
         print("> {}".format(greeting))
