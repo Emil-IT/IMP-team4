@@ -7,12 +7,17 @@ import random
 import websockets
 import Decoder
 import functions
+import queue
 
 local = 'localhost'
 pi = '130.243.201.239'
 
 class RpiServer(object):
     """docstring for ClassName"""
+    callbackQueue = Queue.Queue()
+    clientSockets = []
+    robotSockets = []
+
     def __init__(self):
         ws = threading.Thread(target = self.setupBTConnection)
         bt = threading.Thread(target = self.setupWSConnection)
@@ -21,7 +26,21 @@ class RpiServer(object):
         bt.start()
 
         ws.join()
-        bt.join()  
+        bt.join()
+
+        self.listenToChildren()
+
+    def listenToChildren()
+        while True:
+            item = callbackQueue.get()
+            print('Doing work on task: ', item)
+            function = getattr(self, item[0], None)
+            if(functions != None):
+                function(*tuple(item[1:]))
+            callbackQueue.task_done()
+
+    def redirectMesage(self, message, clientSocket, robotSocket):
+        print(message, clientSocket, robotSocket)
 
 
     def closeSockets(self, s, c):
@@ -61,7 +80,7 @@ class RpiServer(object):
     def setupWSConnection(self):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        start_server = websockets.serve(websocketServer.hello, pi, 1234)
+        start_server = websockets.serve(websocketServer.hello, pi, 1234, parent = self)
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
 
@@ -81,9 +100,9 @@ class RpiServer(object):
         while True:
             print("Waiting for connection on RFCOMM channel %d" % port)
             clientSocket, clientInfo = serverBTSocket.accept()
+            robotSockets.append(clietInfo[0], clientSocket)
             print("Accepted connection from ", clientInfo)
             returnValue = self.talkToClient(clientSocket, clientInfo)
-            #start_new_thread(talkToClient, (clientSocket, clientInfo))
             if(returnValue == -1):
                 break
         serverBTSocket.close()

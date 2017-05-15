@@ -18,8 +18,8 @@ pi = '130.243.201.239'
     # yield from asyncio.sleep(random.random() * 3)
 
 @asyncio.coroutine
-def hello(websocket, path):
-    print('hi')
+def hello(websocket, path, parent):
+    print('Connected by ', websocket)
     function, argList = Decoder.Decoder.decode(path)
     print('function=' + function)
     print('arguments=' + str(argList))
@@ -40,6 +40,7 @@ def hello(websocket, path):
     while True:
         name = yield from websocket.recv()
         print("< {}".format(name))
+        parent.callbackQueue.put(('redirectMessage', name, websocket, 0))
         greeting = "Hello {}!".format(name)
         yield from websocket.send(str(greeting))
         print("> {}".format(greeting))
