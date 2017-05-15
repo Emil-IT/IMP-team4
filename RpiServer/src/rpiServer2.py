@@ -11,7 +11,7 @@ import queue
 
 local = 'localhost'
 pi = '130.243.201.239'
-callbackQueue = Queue.Queue()
+callbackQueue = queue.Queue()
 
 class RpiServer(object):
     """docstring for ClassName"""
@@ -25,14 +25,17 @@ class RpiServer(object):
 
         ws.start()
         bt.start()
+        print('threads started')
+        self.listenToChildren()
 
         ws.join()
         bt.join()
+        print('threads joined')
 
-        self.listenToChildren()
 
-    def listenToChildren():
+    def listenToChildren(self):
         while True:
+            print('Ready to listen to children')
             item = callbackQueue.get()
             print('Doing work on task: ', item)
             function = getattr(self, item[0], None)
