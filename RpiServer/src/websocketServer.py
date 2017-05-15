@@ -6,6 +6,7 @@ import random
 import websockets
 import Decoder
 import functions
+import rpiServer2
 
 local = 'localhost'
 pi = '130.243.201.239'
@@ -18,7 +19,7 @@ pi = '130.243.201.239'
     # yield from asyncio.sleep(random.random() * 3)
 
 @asyncio.coroutine
-def hello(websocket, path, parent):
+def hello(websocket, path):
     print('Connected by ', websocket)
     function, argList = Decoder.Decoder.decode(path)
     print('function=' + function)
@@ -40,7 +41,7 @@ def hello(websocket, path, parent):
     while True:
         name = yield from websocket.recv()
         print("< {}".format(name))
-        parent.callbackQueue.put(('redirectMessage', name, websocket, 0))
+        rpiServer2.callbackQueue.put(('redirectMessage', name, websocket, 0))
         greeting = "Hello {}!".format(name)
         yield from websocket.send(str(greeting))
         print("> {}".format(greeting))

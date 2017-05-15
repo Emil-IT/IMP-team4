@@ -11,10 +11,11 @@ import queue
 
 local = 'localhost'
 pi = '130.243.201.239'
+callbackQueue = Queue.Queue()
 
 class RpiServer(object):
     """docstring for ClassName"""
-    callbackQueue = Queue.Queue()
+
     clientSockets = []
     robotSockets = []
 
@@ -30,7 +31,7 @@ class RpiServer(object):
 
         self.listenToChildren()
 
-    def listenToChildren()
+    def listenToChildren():
         while True:
             item = callbackQueue.get()
             print('Doing work on task: ', item)
@@ -80,7 +81,7 @@ class RpiServer(object):
     def setupWSConnection(self):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        start_server = websockets.serve(websocketServer.hello, pi, 1234, parent = self)
+        start_server = websockets.serve(websocketServer.hello, pi, 1234)
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
 
