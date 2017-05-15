@@ -82,7 +82,7 @@ class RpiServer(object):
             print("Waiting for connection on RFCOMM channel %d" % port)
             clientSocket, clientInfo = serverBTSocket.accept()
             print("Accepted connection from ", clientInfo)
-            returnValue = talkToClient(clientSocket, clientInfo)
+            returnValue = self.talkToClient(clientSocket, clientInfo)
             #start_new_thread(talkToClient, (clientSocket, clientInfo))
             if(returnValue == -1):
                 break
