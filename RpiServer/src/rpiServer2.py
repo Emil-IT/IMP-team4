@@ -1,70 +1,85 @@
 import bluetooth
-from _thread import start_new_thread
+import threading
+import websocketServer
 
-def setupConnection():
-    serverBTSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-    serverBTSocket.bind(("", bluetooth.PORT_ANY))
-    serverBTSocket.listen(1)
+local = 'localhost'
+pi = '130.243.201.239'
 
-    port = serverBTSocket.getsockname()[1]
+class RpiServer(object):
+    """docstring for ClassName"""
+    def __init__(self):
+        ws = threading.Thread(target = self.setupBTConnection)
+        bt = threading.Thread(target = self.setupWSConnection)
 
+        ws.start()
+        bt.start()
 
-    uuid = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
+        ws.join()
+        bt.join()  
 
-    bluetooth.advertise_service(serverBTSocket, "rpiBluetoothServer",
-                       service_id=uuid,
-                       service_classes=[uuid, bluetooth.SERIAL_PORT_CLASS],
-                       profiles=[bluetooth.SERIAL_PORT_PROFILE],
-                        )
+    def setupWSConnection():
+        start_server = websockets.serve(websocketServer.hello, pi, 1234)
+        asyncio.get_event_loop().run_until_complete(start_server)
+        asyncio.get_event_loop().run_forever()
 
-    
-    return serverBTSocket, port
+    def setupBTConnection():
+        serverBTSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+        serverBTSocket.bind(("", bluetooth.PORT_ANY))
+        serverBTSocket.listen(1)
 
-def closeSockets(s, c):
-    s.close()
-    c.close()
-    
-def CloseSockets(c):
-    c.close()
+        port = serverBTSocket.getsockname()[1]
+        uuid = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
 
-def talkToClient(clientSocket, clientInfo):
-    size = 1024
-    try:
-        print('Type help for a list of commands\n')
+        bluetooth.advertise_service(serverBTSocket, "rpiBluetoothServer",
+                           service_id=uuid,
+                           service_classes=[uuid, bluetooth.SERIAL_PORT_CLASS],
+                           profiles=[bluetooth.SERIAL_PORT_PROFILE],
+                            )
         while True:
-            data = input('>>')
-            if(data == 'help'):
-                print()
+            print("Waiting for connection on RFCOMM channel %d" % port)
+            clientSocket, clientInfo = serverBTSocket.accept()
+            print("Accepted connection from ", clientInfo)
+            returnValue = talkToClient(clientSocket, clientInfo)
+            #start_new_thread(talkToClient, (clientSocket, clientInfo))
+            if(returnValue == -1):
+                break
+        serverBTSocket.close()
 
-            elif(data == 'q'):
-                clientSocket.send(data)
-                print("Closing  client and server sockets")
-                clientSocket.close()
-                return -1
-            else:
-                clientSocket.send(data)
-                data = clientSocket.recv(size)
-                if data:
-                    print(data)
-    except IOError:
-        pass
+    def closeSockets(s, c):
+        s.close()
+        c.close()
+        
+    def CloseSockets(c):
+        c.close()
 
-    print("disconnected")
-    clientSocket.close()
-    print("all done")
-    return
+    def talkToClient(clientSocket, clientInfo):
+        size = 1024
+        try:
+            print('Type help for a list of commands\n')
+            while True:
+                data = input('>>')
+                if(data == 'help'):
+                    print()
+
+                elif(data == 'q'):
+                    clientSocket.send(data)
+                    print("Closing  client and server sockets")
+                    clientSocket.close()
+                    return -1
+                else:
+                    clientSocket.send(data)
+                    data = clientSocket.recv(size)
+                    if data:
+                        print(data)
+        except IOError:
+            pass
+
+        print("disconnected")
+        clientSocket.close()
+        print("all done")
+        return
 
 
 if __name__ == "__main__":
-    serverBTSocket, port = setupConnection()
-    while True:
-        print("Waiting for connection on RFCOMM channel %d" % port)
-        clientSocket, clientInfo = serverBTSocket.accept()
-        print("Accepted connection from ", clientInfo)
-        returnValue = talkToClient(clientSocket, clientInfo)
-        #start_new_thread(talkToClient, (clientSocket, clientInfo))
-        if(returnValue == -1):
-            break
-        
-
-    serverBTSocket.close()
+    RpiServer()
+    
