@@ -1,6 +1,12 @@
 import bluetooth
 import threading
 import websocketServer
+import asyncio
+import datetime
+import random
+import websockets
+import Decoder
+import functions
 
 local = 'localhost'
 pi = '130.243.201.239'
@@ -17,12 +23,14 @@ class RpiServer(object):
         ws.join()
         bt.join()  
 
-    def setupWSConnection():
+    def setupWSConnection(self):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         start_server = websockets.serve(websocketServer.hello, pi, 1234)
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
 
-    def setupBTConnection():
+    def setupBTConnection(self):
         serverBTSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         serverBTSocket.bind(("", bluetooth.PORT_ANY))
         serverBTSocket.listen(1)
