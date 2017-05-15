@@ -46,7 +46,7 @@ def hello(websocket, path):
 
 
 if __name__ == '__main__':
-    start_server = websockets.serve(hello, local, 1234)
+    start_server = websockets.serve(hello, pi, 1234)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
     
