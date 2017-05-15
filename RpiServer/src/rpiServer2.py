@@ -23,6 +23,7 @@ class RpiServer(object):
         ws.join()
         bt.join()  
 
+
     def closeSockets(s, c):
     s.close()
     c.close()
