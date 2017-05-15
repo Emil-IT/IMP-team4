@@ -25,8 +25,8 @@ class RpiServer(object):
 
 
     def closeSockets(s, c):
-    s.close()
-    c.close()
+        s.close()
+        c.close()
         
     def CloseSockets(c):
         c.close()
