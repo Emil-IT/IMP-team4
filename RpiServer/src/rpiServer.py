@@ -2,23 +2,23 @@ import bluetooth
 from _thread import start_new_thread
 
 def setupConnection():
-    serverSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-    serverSocket.bind(("", bluetooth.PORT_ANY))
-    serverSocket.listen(1)
+    serverBTSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+    serverBTSocket.bind(("", bluetooth.PORT_ANY))
+    serverBTSocket.listen(1)
 
-    port = serverSocket.getsockname()[1]
+    port = serverBTSocket.getsockname()[1]
 
 
     uuid = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
 
-    bluetooth.advertise_service(serverSocket, "rpiBluetoothServer",
+    bluetooth.advertise_service(serverBTSocket, "rpiBluetoothServer",
                        service_id=uuid,
                        service_classes=[uuid, bluetooth.SERIAL_PORT_CLASS],
                        profiles=[bluetooth.SERIAL_PORT_PROFILE],
                         )
 
     
-    return serverSocket, port
+    return serverBTSocket, port
 
 def closeSockets(s, c):
     s.close()
@@ -56,10 +56,10 @@ def talkToClient(clientSocket, clientInfo):
 
 
 if __name__ == "__main__":
-    serverSocket, port = setupConnection()
+    serverBTSocket, port = setupConnection()
     while True:
         print("Waiting for connection on RFCOMM channel %d" % port)
-        clientSocket, clientInfo = serverSocket.accept()
+        clientSocket, clientInfo = serverBTSocket.accept()
         print("Accepted connection from ", clientInfo)
         returnValue = talkToClient(clientSocket, clientInfo)
         #start_new_thread(talkToClient, (clientSocket, clientInfo))
@@ -67,4 +67,4 @@ if __name__ == "__main__":
             break
         
 
-    serverSocket.close()
+    serverBTSocket.close()
