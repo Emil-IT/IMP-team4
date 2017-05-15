@@ -24,14 +24,14 @@ class RpiServer(object):
         bt.join()  
 
 
-    def closeSockets(s, c):
+    def closeSockets(self, s, c):
         s.close()
         c.close()
         
-    def CloseSockets(c):
+    def CloseSockets(self, c):
         c.close()
 
-    def talkToClient(clientSocket, clientInfo):
+    def talkToClient(seld, clientSocket, clientInfo):
         size = 1024
         try:
             print('Type help for a list of commands\n')
