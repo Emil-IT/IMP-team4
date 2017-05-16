@@ -1,4 +1,3 @@
-import rpiServer2
 import logging
 from websocket_server import WebsocketServer
 
@@ -16,7 +15,7 @@ class RpiServerWS():
         self.server.set_fn_client_left(self.client_left)
         print('Websocket Server started, waiting for clients to connect')
         self.server.run_forever()
-        
+
     def new_client(self, client, server):
         print('Connected by ', client)
         self.parent.clientSockets.append(client)
