@@ -1,56 +1,30 @@
-#!/usr/bin/env python
-
-import asyncio
-import datetime
-import random
-import websockets
-import Decoder
-import functions
-import rpiServer2
+import rpiServer
+import logging
 
 local = 'localhost'
 pi = '130.243.201.239'
 
-# @asyncio.coroutine
-# def time(websocket, path):
-    # print(path)
-    # now = datetime.datetime.utcnow().isoformat() + 'Z'
-    # yield from websocket.send(now)
-    # yield from asyncio.sleep(random.random() * 3)
+class WebsocketServer():
+    """docstring for WebsocketServer"""
+    server = None
+    def __init__(self, parent):
+        self.server = WebsocketServer(1234, host=pi, loglevel=logging.INFO)
+        self.server.set_fn_new_client(self.new_client)
+        self.server.set_fn_message_received(self.message_received)
+        self.server.set_fn_client_left(self.client_left)
+        print('Websocket Server started, waiting for clients to connect')
+        self.server.run_forever()
+        
+    def new_client(self, client, server):
+        print('Connected by ', client)
+        parent.clientSockets.append(client)
+        self.server.send_message_to_all("Hey all, a new client has joined us")
 
-@asyncio.coroutine
-def hello(websocket, path):
-    print('Connected by ', websocket)
-    function, argList = Decoder.Decoder.decode(path)
-    print('function=' + function)
-    print('arguments=' + str(argList))
-    if argList is None:
-        argList = []
-    if(hasattr(functions.Functions, function)):
-        greeting = getattr(functions.Functions, function)(*tuple([val[1] for val in argList]))
-    else:
-        greeting = 'No such function'
-	
-    #name = yield from websocket.recv()
-    #print("< {}".format(name))
-
-    #greeting = "Hello {}!".format(name)
-    print('Greeting='+str(greeting))
-    yield from websocket.send(str(greeting))
-    #print("> {}".format(greeting))
-    while True:
-        name = yield from websocket.recv()
-        print("< {}".format(name))
-        item = ('redirectMessage', name, websocket, 0)
+    def message_received(self, client, server, message):
+        item = ('redirectMessage', message, client, 0)
         print('putting ', item, 'in the queue')
-        rpiServer2.callbackQueue.put(item)
-        greeting = "Hello {}!".format(name)
-        yield from websocket.send(str(greeting))
-        print("> {}".format(greeting))
+        parent.callbackQueue.put(item)
+        self.server.send_message(client, 'Message received')
 
-
-if __name__ == '__main__':
-    start_server = websockets.serve(hello, pi, 1234)
-    asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
-    
+    def client_left(self, client, server):
+        parent.clientSockets.remove(client)
