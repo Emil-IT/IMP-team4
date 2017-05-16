@@ -49,6 +49,7 @@ class RpiServer(object):
 
     def redirectMessage(self, message, clientSocket, robotSocket):
         print('In redirect message')
+        print('Connected robots :', self.robotSockets)
         print(message, clientSocket, robotSocket)
 
 
@@ -109,7 +110,7 @@ class RpiServer(object):
         while True:
             print("Waiting for connection on RFCOMM channel %d" % port)
             clientSocket, clientInfo = serverBTSocket.accept()
-            robotSockets.append(clietInfo[0], clientSocket)
+            self.robotSockets.append((clientInfo[0], clientSocket))
             print("Accepted connection from ", clientInfo)
             returnValue = self.talkToClient(clientSocket, clientInfo)
             if(returnValue == -1):
