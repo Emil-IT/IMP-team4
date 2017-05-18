@@ -37,6 +37,10 @@ class RpiServer(object):
             try:
                 item = self.callbackQueue.get()
                 print('Doing work on task: ', item)
+                message = item[0]
+                if(message.split('&')[0] = 'Issue_task'):
+                    self.issue_task(message.split('&')[1], item[2], item[1], message.split('&')[2])
+
                 if(hasattr(self, item[0])):
                     print('it exists')
                     getattr(self, item[0], None)(*tuple(item[1:]))
@@ -45,6 +49,40 @@ class RpiServer(object):
                     print('no such function')
             except queue.Empty:
                 pass
+
+    def issue_task(self, robotID, clientSocket, wsServer, shelfID):
+        robotSocket = robotSockets[int(robotID)]
+        shelfCoords = getCoords(shelfID)
+        path = getPath(shelfCoords)
+        robotSocket.send(str(path))
+        response = robotSocket.recv(size)
+        self.sendData(wsServer, clientSocket, str(response))
+
+    def getCoords(self, shelfID):
+        shelfCoords = []
+        section, shelf = list(shelfID)
+        shelfCoords.append((ord(section) - 65) / 2)
+        shelfCoords.append(int(shelf) / 2 + 1)
+        shelfCoords.append((ord(section) - 65) % 2)
+        shelfCoords.append(int(shelf) % 2)
+
+    def getPath(self, shelfCoords):
+        path = []
+        if(shelfCoords[0] > 0):
+            path.append('right')
+            for i in range(0, shelfCoords[0]):
+                path.append('forward')
+            path.append('left')
+        for i in range(0, shelfCoords[1]+1):
+            path.append('forward')
+        if(shelfCoords[2] == 1):
+            path.append('right')
+        else:
+            path.append('left')
+        for i in range(0, shelfCoords[3]):
+            path.append('lift')
+        path.append('pick up')
+        return path
 
     def redirectMessage(self, message, server, clientSocket, robotSocket):
         print('In redirect message')
@@ -61,6 +99,8 @@ class RpiServer(object):
         else:
             self.sendData(server, clientSocket, 'No robot connected :(')
 
+
+
     def sendData(self, server, client, message):
         server.send_message(client, message)
 
@@ -68,9 +108,9 @@ class RpiServer(object):
         rpiServerWS.RpiServerWS(self)
 
     def setupBTConnection(self):
-        rpiServerBT.RpiServerBT(self)
-        
+        rpiServerBT.pRiServerBT(self)
+
 
 if __name__ == "__main__":
     RpiServer()
-    
+
