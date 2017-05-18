@@ -57,6 +57,9 @@ class RpiServer(object):
                 pass
 
     def issue_task(self, robotID, clientSocket, wsServer, shelfID):
+        if(len(self.robotSockets) == 0):
+            self.sendData(wsServer, clientSocket, 'No robot connected :(')
+            return
         robotSocket = self.robotSockets[int(robotID)][1]
         shelfCoords = self.getCoords(shelfID)
         path = self.getPath(shelfCoords)
