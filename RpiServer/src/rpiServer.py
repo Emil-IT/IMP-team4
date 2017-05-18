@@ -44,7 +44,7 @@ class RpiServer(object):
                 item = self.callbackQueue.get()
                 print('Doing work on task: ', item)
                 message = item[0]
-                if(message.split('&')[0] = 'Issue_task'):
+                if(message.split('&')[0] == 'Issue_task'):
                     self.issue_task(message.split('&')[1], item[2], item[1], message.split('&')[2])
 
                 if(hasattr(self, item[0])):
@@ -57,9 +57,9 @@ class RpiServer(object):
                 pass
 
     def issue_task(self, robotID, clientSocket, wsServer, shelfID):
-        robotSocket = robotSockets[int(robotID)]
-        shelfCoords = getCoords(shelfID)
-        path = getPath(shelfCoords)
+        robotSocket = self.robotSockets[int(robotID)][1]
+        shelfCoords = self.getCoords(shelfID)
+        path = self.getPath(shelfCoords)
         robotSocket.send(str(path))
         response = robotSocket.recv(size)
         self.sendData(wsServer, clientSocket, str(response))
@@ -67,10 +67,11 @@ class RpiServer(object):
     def getCoords(self, shelfID):
         shelfCoords = []
         section, shelf = list(shelfID)
-        shelfCoords.append((ord(section) - 65) / 2)
-        shelfCoords.append(int(shelf) / 2 + 1)
+        shelfCoords.append((ord(section) - 65) // 2)
+        shelfCoords.append(int(shelf) // 2 + 1)
         shelfCoords.append((ord(section) - 65) % 2)
         shelfCoords.append(int(shelf) % 2)
+        return shelfCoords
 
     def getPath(self, shelfCoords):
         path = []
@@ -79,12 +80,13 @@ class RpiServer(object):
             for i in range(0, shelfCoords[0]):
                 path.append('forward')
             path.append('left')
-        for i in range(0, shelfCoords[1]+1):
+        for i in range(0, shelfCoords[1]):
             path.append('forward')
         if(shelfCoords[2] == 1):
             path.append('right')
         else:
             path.append('left')
+        path.append('forward')
         for i in range(0, shelfCoords[3]):
             path.append('lift')
         path.append('pick up')
@@ -114,7 +116,7 @@ class RpiServer(object):
         rpiServerWS.RpiServerWS(self)
 
     def setupBTConnection(self):
-        rpiServerBT.pRiServerBT(self)
+        rpiServerBT.RpiServerBT(self)
 
     def setupARDConnection(self):
         rpiServerARD.RpiServerARD(self)
