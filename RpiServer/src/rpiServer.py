@@ -5,6 +5,7 @@ from websocket_server import WebsocketServer
 import logging
 import rpiServerWS
 import rpiServerBT
+import rpiServerARD
 
 local = 'localhost'
 pi = '130.243.201.239'
@@ -20,14 +21,17 @@ class RpiServer(object):
     def __init__(self):
         ws = threading.Thread(target = self.setupBTConnection)
         bt = threading.Thread(target = self.setupWSConnection)
-
+        ard = threading.Thread(target = self.setupARDConnection)
+        
         ws.start()
         bt.start()
+        ard.start()
         print('threads started')
         self.listenToChildren()
 
         ws.join()
         bt.join()
+        ard.join()
         print('threads joined')
 
 
@@ -70,6 +74,8 @@ class RpiServer(object):
     def setupBTConnection(self):
         rpiServerBT.RpiServerBT(self)
         
+    def setupARDConnection(self):
+        rpiServerARD.RpiServerARD(self)
 
 if __name__ == "__main__":
     RpiServer()
