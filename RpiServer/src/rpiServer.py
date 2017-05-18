@@ -18,6 +18,8 @@ class RpiServer(object):
     robotSockets = []
     callbackQueue = queue.Queue()
 
+    sensorJSON = ''
+    
     def __init__(self):
         ws = threading.Thread(target = self.setupBTConnection)
         bt = threading.Thread(target = self.setupWSConnection)
@@ -77,6 +79,7 @@ class RpiServer(object):
     def setupARDConnection(self):
         rpiServerARD.RpiServerARD(self)
 
+        
 if __name__ == "__main__":
     RpiServer()
     
