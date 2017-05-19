@@ -55,8 +55,7 @@ class RpiServerBT():
     def closeSockets(self, s, c):
         s.close()
         c.close()
-        
+
     def CloseSockets(self, c):
         c.close()
 
-		

@@ -22,10 +22,10 @@ class RpiServerWS():
         self.server.send_message_to_all("Hey all, a new client has joined us")
 
     def message_received(self, client, server, message):
-        item = ('redirectMessage', message, self.server, client, 0)
+        item = (message, self.server, client)
         print('putting ', item, 'in the queue')
         self.parent.callbackQueue.put(item)
-        self.server.send_message(client, 'Message received')
+        self.server.send_message(client, 'WS: Message put in queue')
 
     def client_left(self, client, server):
         self.parent.clientSockets.remove(client)
