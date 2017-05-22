@@ -61,4 +61,3 @@ class RpiServerBT():
 				serverInetSocket.close()
 				serverBTSocket.close()
 				sys.exit('Server closed')
-
