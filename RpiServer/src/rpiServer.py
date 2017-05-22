@@ -6,6 +6,7 @@ import logging
 import rpiServerWS
 import rpiServerBT
 import rpiServerARD
+import select
 
 local = 'localhost'
 pi = '130.243.201.239'
@@ -42,30 +43,51 @@ class RpiServer(object):
             print('Ready to listen to children')
             try:
                 item = self.callbackQueue.get()
-                print('Doing work on task: ', item)
+                #print('Doing work on task: ', item)
                 message = item[0]
-                if(message.split('&')[0] == 'Issue_task'):
-                    self.issue_task(message.split('&')[1], item[2], item[1], message.split('&')[2])
+                #if(message.split('&')[0] == 'Issue_task'):
+                 #   self.issue_task(message.split('&')[1], item[2], item[1], message.split('&')[2])
 
-                if(hasattr(self, item[0])):
-                    print('it exists')
-                    getattr(self, item[0], None)(*tuple(item[1:]))
+
+                if(hasattr(self, item[0].split('&')[0])):
+                    print('Calling requested function')
+                    getattr(self, item[0].split('&')[0], None)(item[1], item[2], *tuple(item[0].split('&')[1:]))
                     self.callbackQueue.task_done()
                 else:
                     print('no such function')
             except queue.Empty:
                 pass
 
-    def issue_task(self, robotID, clientSocket, wsServer, shelfID):
+    def getStatus(self, wsServer, clientSocket):
+        pass
+
+    def issue_task(self, wsServer, clientSocket, robotID, shelfID):
         if(len(self.robotSockets) == 0):
             self.sendData(wsServer, clientSocket, 'No robot connected :(')
             return
         robotSocket = self.robotSockets[int(robotID)][1]
         shelfCoords = self.getCoords(shelfID)
         path = self.getPath(shelfCoords)
-        robotSocket.send(str(path))
-        response = robotSocket.recv(size)
-        self.sendData(wsServer, clientSocket, str(response))
+        try:
+            ready_to_read, ready_to_write, in_error = \
+            select.select([robotSocket,], [robotSocket,], [], 5)
+        except select.error:
+            robotSocket.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both
+            robotSocket.close()
+        # connection error event here, maybe reconnect
+            print('connection error')
+            return
+        if(len(ready_to_write) > 0):
+            robotSocket.send(str(path).encode())
+            print('Message sent to robot')
+            response = robotSocket.recv(size)
+            self.sendData(wsServer, clientSocket, response.decode())
+            return
+        else:
+            robotSocket.close()
+            robotSockets.pop(int(robotID))
+        self.sendData(wsServer, clientSocket, 'Lost connection to robot')
+
 
     def getCoords(self, shelfID):
         shelfCoords = []
