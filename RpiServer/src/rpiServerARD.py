@@ -9,7 +9,7 @@ class RpiServerARD():
         print('Opened connection on port %s' %ser.name)
         while True:
             incoming = ser.readline().decode()
-            print(incoming)
+            self.parent.sensorJSON = incoming
         
         
         
