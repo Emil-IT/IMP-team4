@@ -8,6 +8,8 @@ import rpiServerBT
 import rpiServerARD
 import select
 import json
+import sqlite3
+
 
 local = 'localhost'
 pi = '130.243.201.239'
@@ -21,6 +23,7 @@ class RpiServer(object):
 	callbackQueue = queue.Queue()
 
 	sensorJSON = ''
+	databaseConn = sqlite3.connect('../db/warehouses.db')
 
 	def __init__(self):
 		ws = threading.Thread(target = self.setupBTConnection)
