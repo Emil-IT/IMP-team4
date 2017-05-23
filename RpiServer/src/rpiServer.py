@@ -61,6 +61,7 @@ class RpiServer(object):
 			except queue.Empty:
 				pass
 
+
 	def get_data(self, wsServer, clientSocket):
 		pass
 
@@ -70,7 +71,6 @@ class RpiServer(object):
 
 	def dropOff(self, wsServer, clientSocket, **kwargs):
 		self.issue_task(wsServer, clientSocket, shelfID = kwargs['shelfID'], pickUp = False)
-		pass
 
 	def issue_task(self, wsServer, clientSocket, **kwargs):
 		if(len(self.robotSockets) == 0):
