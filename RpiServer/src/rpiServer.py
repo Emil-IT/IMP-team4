@@ -64,16 +64,27 @@ class RpiServer(object):
 			except queue.Empty:
 				pass
 
-	def getStatus(self, wsServer, clientSocket):
+
+	def get_data(self, wsServer, clientSocket):
 		pass
+
+	def pickUp(self, wsServer, clientSocket, **kwargs):
+		self.issue_task(wsServer, clientSocket, shelfID = kwargs['shelfID'], pickUp = True)
+		pass
+
+	def dropOff(self, wsServer, clientSocket, **kwargs):
+		self.issue_task(wsServer, clientSocket, shelfID = kwargs['shelfID'], pickUp = False)
 
 	def issue_task(self, wsServer, clientSocket, **kwargs):
 		if(len(self.robotSockets) == 0):
-			self.sendData(wsServer, clientSocket, 'No robot connected :(')
+			if(kwargs['pickUp']):
+				self.sendData(wsServer, clientSocket, '{"functionName": "pickUp", "errorMessage": "No robot connected :("}')
+			else:
+				self.sendData(wsServer, clientSocket, '{"functionName": "dropOff", "errorMessage": "No robot connected :("}')
 			return
 		robotSocket = self.robotSockets[int(kwargs['robotID'])][1]
 		shelfCoords = self.getCoords(kwargs['shelfID'])
-		path = self.getPath(shelfCoords)
+		path = self.getPath(shelfCoords, kwargs['pickUp'])
 		try:
 			ready_to_read, ready_to_write, in_error = \
 			select.select([robotSocket,], [robotSocket,], [], 5)
@@ -91,7 +102,7 @@ class RpiServer(object):
 			return
 		else:
 			robotSocket.close()
-			robotSockets.pop(int(robotID))
+			robotSockets.pop(int(kwargs['robotID']))
 		self.sendData(wsServer, clientSocket, 'Lost connection to robot')
 
 
@@ -104,7 +115,7 @@ class RpiServer(object):
 		shelfCoords.append(int(shelf) % 2)
 		return shelfCoords
 
-	def getPath(self, shelfCoords):
+	def getPath(self, shelfCoords, pickUp):
 		path = ['task']
 		if(shelfCoords[0] > 0):
 			path.append('right')
@@ -120,7 +131,10 @@ class RpiServer(object):
 		path.append('forward')
 		for i in range(0, shelfCoords[3]):
 			path.append('lift')
-		path.append('pick up')
+		if(pickUp):
+			path.append('pick up')
+		else:
+			path.append('drop off')
 		return path
 
 	def redirectMessage(self, message, server, clientSocket, robotSocket):

@@ -25,7 +25,7 @@ class RpiServerWS():
         item = (message, self.server, client)
         #print('putting ', item, 'in the queue')
         self.parent.callbackQueue.put(item)
-        self.server.send_message(client, 'WS: Message put in queue')
+        #self.server.send_message(client, 'WS: Message put in queue')
 
     def client_left(self, client, server):
         self.parent.clientSockets.remove(client)
