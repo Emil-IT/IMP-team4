@@ -164,10 +164,8 @@ class RpiServer(object):
 	def sendData(self, server, client, message):
 		try:
 			server.send_message(client, message)
-		except(socket.error, e):
-			if e[0] == errno.EPIPE:
+		except BrokenPipeError:
 				print("Socket was closed")
-			else:
 				pass
 
 	def setupWSConnection(self):
