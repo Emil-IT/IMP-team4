@@ -68,19 +68,12 @@ class RpiServer(object):
 	def get_data(self, wsServer, clientSocket):
 		pass
 
-	def pickUp(self, wsServer, clientSocket, **kwargs):
-		self.issue_task(wsServer, clientSocket, shelfID = kwargs['shelfID'], pickUp = True)
-		pass
-
-	def dropOff(self, wsServer, clientSocket, **kwargs):
-		self.issue_task(wsServer, clientSocket, shelfID = kwargs['shelfID'], pickUp = False)
-
 	def issue_task(self, wsServer, clientSocket, **kwargs):
+		origin = kwargs['origin']
+		destination = kwargs['destination']
+		zone = kwargs['zone']
 		if(len(self.robotSockets) == 0):
-			if(kwargs['pickUp']):
-				self.sendData(wsServer, clientSocket, '{"functionName": "pickUp", "errorMessage": "No robot connected :("}')
-			else:
-				self.sendData(wsServer, clientSocket, '{"functionName": "dropOff", "errorMessage": "No robot connected :("}')
+			self.sendData(wsServer, clientSocket, '{"functionName": "pickUp", "errorMessage": "No robot connected :("}')
 			return
 		robotSocket = self.robotSockets[int(kwargs['robotID'])][1]
 		shelfCoords = self.getCoords(kwargs['shelfID'])

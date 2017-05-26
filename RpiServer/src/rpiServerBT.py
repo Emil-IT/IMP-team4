@@ -57,7 +57,7 @@ class RpiServerBT():
 
 	def cleanExit(self, serverInetSocket, serverBTSocket):
 		while True:
-			if(input('Write quit for a clean exit:\n >>') == 'quit'):
+			if(input('Write quit for a clean exit:\n >>') == 'quit\n'):
 				serverInetSocket.close()
 				serverBTSocket.close()
 				sys.exit('Server closed')
