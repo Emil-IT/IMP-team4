@@ -9,6 +9,7 @@ import rpiServerARD
 import select
 import json
 import sqlite3
+import jsonBuilder
 
 
 local = 'localhost'
@@ -66,6 +67,16 @@ class RpiServer(object):
 
 
 	def get_data(self, wsServer, clientSocket):
+		#zones
+		zonesJSON = jsonBuilder.buildZones(self.databaseConn)
+		
+		robotsJSON = '"robots": []'
+		
+		
+		warehouseJSON = '{'+zonesJSON+'}'
+		print(warehouseJSON)
+		self.sendData(wsServer, clientSocket, warehouseJSON)
+		
 		pass
 
 	def pickUp(self, wsServer, clientSocket, **kwargs):

@@ -28,15 +28,15 @@ class RpiServerBT():
 							)
 		bt = threading.Thread(target = self.socketConnection, args = (serverBTSocket, port))
 		inet = threading.Thread(target = self.socketConnection, args = (serverInetSocket, INETPORT))
-		quit = threading.Thread(target = self.cleanExit, args = (serverInetSocket, serverBTSocket))
+		#quit = threading.Thread(target = self.cleanExit, args = (serverInetSocket, serverBTSocket))
 
 		bt.start()
 		inet.start()
-		quit.start()
+		#quit.start()
 
 		bt.join()
 		inet.join()
-		quit.join()
+		#quit.join()
 
 		serverInetSocket.close()
 		serverBTSocket.close()
@@ -57,7 +57,7 @@ class RpiServerBT():
 
 	def cleanExit(self, serverInetSocket, serverBTSocket):
 		while True:
-			if(input('Write quit for a clean exit:\n >>') == 'quit'):
+			if(input('Write quit for a clean exit:\n >>') == 'quit\n'):
 				serverInetSocket.close()
 				serverBTSocket.close()
 				sys.exit('Server closed')
