@@ -69,14 +69,10 @@ class RpiServer(object):
 	def get_data(self, wsServer, clientSocket):
 		#zones
 		zonesJSON = jsonBuilder.buildZones(self.databaseConn)
-		
 		robotsJSON = '"robots": []'
-		
-		
 		warehouseJSON = '{'+zonesJSON+'}'
 		print(warehouseJSON)
 		self.sendData(wsServer, clientSocket, warehouseJSON)
-		
 		pass
 
 	def issue_task(self, wsServer, clientSocket, **kwargs):
@@ -84,8 +80,12 @@ class RpiServer(object):
 		destination = kwargs['destination']
 		zone = kwargs['zone']
 		if(len(self.robotSockets) == 0):
-			self.sendData(wsServer, clientSocket, '{"functionName": "pickUp", "errorMessage": "No robot connected :("}')
+			self.sendData(wsServer, clientSocket, '{"functionName": "pickUp", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": "", "robot_id": "", "priority":0} }')
 			return
+		c = self.databaseConn.cursor()
+		c.execute("select robot_id from zone, warehouse where zone.werehouse_id = warehouse.id and warehouse.site = 'uppsala' and zone.position = ?", int(zone))
+		robotID = c.fetchone()
+		print('RobotID: {}'.format(robotID))
 		robotSocket = self.robotSockets[int(kwargs['robotID'])][1]
 		shelfCoords = self.getCoords(kwargs['shelfID'])
 		path = self.getPath(shelfCoords, kwargs['pickUp'])
@@ -139,6 +139,7 @@ class RpiServer(object):
 			path.append('pick up')
 		else:
 			path.append('drop off')
+		path.append('turn')
 		return path
 
 	def redirectMessage(self, message, server, clientSocket, robotSocket):
@@ -157,7 +158,6 @@ class RpiServer(object):
 			self.sendData(server, clientSocket, 'No robot connected :(')
 
 
-
 	def sendData(self, server, client, message):
 		server.send_message(client, message)
 
@@ -169,7 +169,6 @@ class RpiServer(object):
 
 	def setupARDConnection(self):
 		rpiServerARD.RpiServerARD(self)
-
 
 
 if __name__ == "__main__":
