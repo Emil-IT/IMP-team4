@@ -70,11 +70,14 @@ class RpiServer(object):
 		#zones
 		zonesJSON = jsonBuilder.buildZones(self.databaseConn)
 		
-		robotsJSON = '"robots": []'
+		robotsJSON = jsonBuilder.buildRobots(self.databaseConn)
 		
+		packagesJSON = jsonBuilder.buildPackages(self.databaseConn)
 		
-		warehouseJSON = '{'+zonesJSON+'}'
-		print(warehouseJSON)
+		tasksJSON = jsonBuilder.buildTasks(self.databaseConn)
+		
+		warehouseJSON = '{'+zonesJSON+','+robotsJSON+','+packagesJSON+','+tasksJSON+'}'
+		#print(warehouseJSON)
 		self.sendData(wsServer, clientSocket, warehouseJSON)
 		
 		pass
@@ -166,7 +169,13 @@ class RpiServer(object):
 
 
 	def sendData(self, server, client, message):
-		server.send_message(client, message)
+		try:
+			server.send_message(client, message)
+		except(socket.error, e):
+			if e[0] == errno.EPIPE:
+				print("Socket was closed")
+			else:
+				pass
 
 	def setupWSConnection(self):
 		rpiServerWS.RpiServerWS(self)
