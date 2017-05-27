@@ -10,6 +10,6 @@ class RpiServerARD():
         while True:
             incoming = ser.readline().decode()
             self.parent.sensorJSON = incoming
-        
-        
-        
+
+
+

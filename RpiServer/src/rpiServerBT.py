@@ -5,6 +5,7 @@ import sys
 
 HOST = "ctrl.gspd4.student.it.uu.se"
 INETPORT = 8051
+size = 1024
 
 class RpiServerBT():
 	"""docstring for RpiServerBT"""
@@ -48,9 +49,10 @@ class RpiServerBT():
 			while True:
 				print("Waiting for connection on port %d" % port)
 				clientSocket, clientInfo = serverSocket.accept()
-				self.parent.robotSockets.append((clientInfo[0], clientSocket))
 				print("Accepted connection from ", clientInfo)
 				clientSocket.sendall('Welcome to the server'.encode())
+				robot_id = int(clientSocket.recv(size))
+				self.parent.robotSockets.append((robot_id, clientSocket))
 		finally:
 			return
 

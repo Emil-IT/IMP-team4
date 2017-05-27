@@ -10,6 +10,7 @@ import select
 import json
 import sqlite3
 import jsonBuilder
+import uuid
 
 
 local = 'localhost'
@@ -82,11 +83,23 @@ class RpiServer(object):
 		destination = kwargs['destination']
 		zone = kwargs['zone']
 		if(len(self.robotSockets) == 0):
-			self.sendData(wsServer, clientSocket, '{"functionName": "pickUp", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": "", "robot_id": "", "priority":0} }')
+			self.sendData(wsServer, clientSocket, '{"functionName": "issue_task", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": "", "robot_id": "", "priority":0} }').format(origin, destination, zone)
 			return
 		c = self.databaseConn.cursor()
 		c.execute("select robot_id from zone, warehouse where zone.werehouse_id = warehouse.id and warehouse.site = 'uppsala' and zone.position = ?", int(zone))
 		robotID = c.fetchone()
+		if(robotID == None):
+			self.sendData(wsServer, clientSocket, '{"functionName": "issue_task", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": "", "robot_id": "", "priority":0} }').format(origin, destination, zone)
+			return
+		task_id = uuid4()
+		if(origin == "conv"):
+			package_id = uuid4()
+		else:
+			c.execute("select package_id from shelf, warehouse where shelf.werehouse_id = warehouse.id and warehouse.site = 'uppsala' and shelf.name = ?", int(origin))
+			package_id = c.fetchone()
+		self.sendData(wsServer, clientSocket, '{"functionName": "issue_task", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": {}, "robot_id": "", "priority":0} }').format(origin, destination, zone, package_id)
+
+
 		print('RobotID: {}'.format(robotID))
 		robotSocket = self.robotSockets[int(kwargs['robotID'])][1]
 		shelfCoords = self.getCoords(kwargs['shelfID'])
