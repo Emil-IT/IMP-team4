@@ -94,9 +94,9 @@ class RpiServer(object):
 			print('No robot in zone {}'.format(zone))
 			self.sendData(wsServer, clientSocket, '{"functionName": "issue_task", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": "", "robot_id": "", "priority":0} }'.format(origin, destination, zone))
 			return
-		task_id = uuid4()
+		task_id = uuid.uuid4()
 		if(origin == "conv"):
-			package_id = uuid4()
+			package_id = uuid.uuid4()
 		else:
 			c.execute("select package_id from shelf, warehouse where shelf.warehouse_id = warehouse.id and warehouse.site = 'uppsala' and shelf.name = ?", int(origin))
 			package_id = c.fetchone()
