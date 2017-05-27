@@ -19,6 +19,7 @@ class RpiServerWS():
     def new_client(self, client, server):
         print('Connected by ', client)
         self.parent.clientSockets.append(client)
+        greeting = '{"functionName":"connected", "args":{} }'
         self.server.send_message_to_all("Hey all, a new client has joined us")
 
     def message_received(self, client, server, message):

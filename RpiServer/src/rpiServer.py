@@ -94,9 +94,9 @@ class RpiServer(object):
 			print('No robot in zone {}'.format(zone))
 			self.sendData(wsServer, clientSocket, '{"functionName": "issue_task", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": "", "robot_id": "", "priority":0} }'.format(origin, destination, zone))
 			return
-		task_id = uuid4()
+		task_id = uuid.uuid4()
 		if(origin == "conv"):
-			package_id = uuid4()
+			package_id = uuid.uuid4()
 		else:
 			c.execute("select package_id from shelf, warehouse where shelf.warehouse_id = warehouse.id and warehouse.site = 'uppsala' and shelf.name = ?", int(origin))
 			package_id = c.fetchone()
@@ -139,6 +139,10 @@ class RpiServer(object):
 
 	def getPath(self, shelfCoords, pickUp):
 		path = ['task']
+		if(not pickUp):
+			path.append('turn')
+			path.append('pick up')
+			path.append('turn')
 		if(shelfCoords[0] > 0):
 			path.append('right')
 			for i in range(0, shelfCoords[0]):
@@ -156,6 +160,23 @@ class RpiServer(object):
 		if(pickUp):
 			path.append('pick up')
 		else:
+			path.append('drop off')
+		path.append('turn')
+		for i in range(0, shelfCoords[3]):
+			path.append('lower')
+		path.append('forward')
+		if(shelfCoords[2] == 0):
+			path.append('right')
+		else:
+			path.append('left')
+		for i in range(0, shelfCoords[1]):
+			path.append('forward')
+		if(shelfCoords[0] > 0):
+			path.append('right')
+			for i in range(0, shelfCoords[0]):
+				path.append('forward')
+			path.append('left')
+		if(pickUp):
 			path.append('drop off')
 		path.append('turn')
 		return path
