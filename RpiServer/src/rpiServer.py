@@ -139,6 +139,10 @@ class RpiServer(object):
 
 	def getPath(self, shelfCoords, pickUp):
 		path = ['task']
+		if(not pickUp):
+			path.append('turn')
+			path.append('pick up')
+			path.append('turn')
 		if(shelfCoords[0] > 0):
 			path.append('right')
 			for i in range(0, shelfCoords[0]):
@@ -156,6 +160,23 @@ class RpiServer(object):
 		if(pickUp):
 			path.append('pick up')
 		else:
+			path.append('drop off')
+		path.append('turn')
+		for i in range(0, shelfCoords[3]):
+			path.append('lower')
+		path.append('forward')
+		if(shelfCoords[2] == 0):
+			path.append('right')
+		else:
+			path.append('left')
+		for i in range(0, shelfCoords[1]):
+			path.append('forward')
+		if(shelfCoords[0] > 0):
+			path.append('right')
+			for i in range(0, shelfCoords[0]):
+				path.append('forward')
+			path.append('left')
+		if(pickUp):
 			path.append('drop off')
 		path.append('turn')
 		return path
