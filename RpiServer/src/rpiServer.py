@@ -86,10 +86,12 @@ class RpiServer(object):
 			self.sendData(wsServer, clientSocket, '{"functionName": "issue_task", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": "", "robot_id": "", "priority":0} }'.format(origin, destination, zone))
 			return
 		c = self.databaseConn.cursor()
-		print('Fetching robot_id form db')
-		c.execute("select robot_id from zone, warehouse where zone.warehouse_id = warehouse.id and warehouse.site = 'uppsala' and zone.position = ?", int(zone))
+		print('Fetching robot_id form db zone:{}'.format(zone))
+		query = "select robot_id from zone, warehouse where zone.warehouse_id = warehouse.id and warehouse.site = 'uppsala' and zone.position = {}".format(zone)
+		c.execute(query)
 		robotID = c.fetchone()
 		if(robotID == None):
+			print('No robot in zone {}'.format(zone))
 			self.sendData(wsServer, clientSocket, '{"functionName": "issue_task", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": "", "robot_id": "", "priority":0} }'.format(origin, destination, zone))
 			return
 		task_id = uuid4()
