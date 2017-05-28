@@ -23,8 +23,7 @@ class RpiServer(object):
 	clientSockets = []
 	robotSockets = []
 	callbackQueue = queue.Queue()
-	robotPositions[]
-	#taskQueue = queue.PriorityQueue()
+	robotPositions = []
 
 	sensorJSON = ''
 	databaseConn = sqlite3.connect('../db/warehouses.db')
@@ -75,7 +74,7 @@ class RpiServer(object):
 	def get_data(self, wsServer, clientSocket):
 		#zones
 		zonesJSON = jsonBuilder.buildZones(self.databaseConn)
-		robotsJSON = jsonBuilder.buildRobots(self.databaseConn)
+		robotsJSON = jsonBuilder.buildRobots(self.databaseConn, self.robotPositions)
 		packagesJSON = jsonBuilder.buildPackages(self.databaseConn)
 		tasksJSON = jsonBuilder.buildTasks(self.databaseConn)
 		warehouseJSON = '{'+zonesJSON+','+robotsJSON+','+packagesJSON+','+tasksJSON+'}'
@@ -145,7 +144,7 @@ class RpiServer(object):
 		shelfCoords = self.getCoords(shelf)
 		path = self.getPath(shelfCoords, pickUp)
 		print(path)
-		#self.taskQueue.put(priority, {'robot': robotSocket, path})
+		
 		try:
 			ready_to_read, ready_to_write, in_error = \
 			select.select([robotSocket,], [robotSocket,], [], 5)
@@ -161,7 +160,7 @@ class RpiServer(object):
 				response = robotSocket.recv(size)
 				robotPositions.append(robot_id,square)
 
-			self.sendData(wsServer, clientSocket, ('From robot' + response.decode()))
+			#self.sendData(wsServer, clientSocket, ('From robot' + response.decode()))
 			return
 		else:
 			robotSocket.close()
