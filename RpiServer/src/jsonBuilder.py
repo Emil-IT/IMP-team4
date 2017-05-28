@@ -1,5 +1,5 @@
 def buildZones(connection):
-	
+
 	query = 'select no_aisles, rows_per_aisle, position, site from zone, warehouse where zone.warehouse_id=warehouse.id'
 	cursor = connection.cursor()
 	cursor.execute(query)
@@ -26,7 +26,7 @@ def buildZones(connection):
 	zonesJSON = zonesJSON[:-1] # remove last char (,)
 	zonesJSON += ']'
 	return zonesJSON
-	
+
 def buildRobots(connection):
 	return '"robots":[{"zone": "uppsala0","id": "12345","position": 2}]'
 

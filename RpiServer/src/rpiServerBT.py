@@ -51,7 +51,11 @@ class RpiServerBT():
 				clientSocket, clientInfo = serverSocket.accept()
 				print("Accepted connection from ", clientInfo)
 				clientSocket.sendall('Connected'.encode())
-				robot_id = int(clientSocket.recv(size))
+				print('Connection message sent')
+				response = clientSocket.recv(size)
+				print('Response from robot: {}'.format(response))
+				robot_id = response.decode()
+				robot_id = robot_id[0]
 				print('Adding robot {} to list'.format(robot_id))
 				self.parent.robotSockets.append((robot_id, clientSocket))
 		finally:
