@@ -119,10 +119,10 @@ class RpiServer(object):
 			self.sendData(wsServer, clientSocket, json.dumps(returnJson))
 			return
 		returnJson["args"]["robot_id"] = robot_id
-		returnJson["args"]["task_id"] = uuid.uuid4()
+		returnJson["args"]["task_id"] = str(uuid.uuid4())
 		print('Added ids')
 		if(origin == "conv"):
-			returnJson["args"]["package_id"] = uuid.uuid4()
+			returnJson["args"]["package_id"] = str(uuid.uuid4())
 		else:
 			print('Fetching package ID')
 			query = "select package_id from shelf, warehouse where shelf.warehouse_id = warehouse.id and warehouse.site = 'uppsala' and shelf.name = '{}'".format(str(origin))
