@@ -75,7 +75,8 @@ class RpiServer(object):
 		tasksJSON = jsonBuilder.buildTasks(self.databaseConn)
 		warehouseJSON = '{'+zonesJSON+','+robotsJSON+','+packagesJSON+','+tasksJSON+'}'
 		#print(warehouseJSON)
-		self.sendData(wsServer, clientSocket, warehouseJSON)
+		response = '{"functionName": "get_data", "args":'+warehouseJSON+'}'
+		self.sendData(wsServer, clientSocket, response)
 		pass
 
 	def issue_task(self, wsServer, clientSocket, **kwargs):

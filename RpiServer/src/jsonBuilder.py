@@ -28,10 +28,10 @@ def buildZones(connection):
 	return zonesJSON
 	
 def buildRobots(connection):
-	return '"robots":[{"zone": "Uppsala1","id": "12345","position": {"x": 150,"y": 100}}]'
+	return '"robots":[{"zone": "uppsala0","id": "12345","position": 2}]'
 
 def buildPackages(connection):
-	return '"packages":[{"id":"44421","position":{"x":550,"y":20}},{"id":"44532","position":{"x":250,"y":20}},{"id":"44514","position":{"x":250,"y":450}}]'
+	return '"packages":[{"id":"44421","position":"Conv","carrying":1},{"id":"44532","position":"A3","carrying":0},{"id":"44514","position":"A2","carrying":0}]'
 
 def buildTasks(connection):
-	return '"tasks":[{"task_id":"1234","package_id":"44532","robot_id":"12345","priority":1,"drop_off":"dropoff_2","current_position":{"x":130,"y":200}},{"task_id":"1235","package_id":"44421","robot_id":"12345","priority":2,"drop_off":"dropoff_4","current_position":{"x":130,"y":200}},{"task_id":"1236","package_id":"44514","robot_id":"12345","priority":4,"drop_off":"dropoff_2","current_position":{"x":130,"y":200}}]'
+	return '"tasks":[{"task_id":"1234","package_id":"44532","robot_id":"12345","priority":1,"drop_off":"A2","status":1},{"task_id":"1235","package_id":"44421","robot_id":"12345","priority":2,"drop_off":"Conv","status":0}]'
