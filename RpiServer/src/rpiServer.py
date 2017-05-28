@@ -32,16 +32,19 @@ class RpiServer(object):
 		ws = threading.Thread(target = self.setupBTConnection)
 		bt = threading.Thread(target = self.setupWSConnection)
 		ard = threading.Thread(target = self.setupARDConnection)
+		#tsk = threading.Thread(target = self.taskHandler)
 
 		ws.start()
 		bt.start()
 		ard.start()
+		#tsk.start()
 		print('threads started')
 		self.listenToChildren()
 
 		ws.join()
 		bt.join()
 		ard.join()
+		#tsk.join()
 		print('threads joined')
 
 
@@ -80,14 +83,17 @@ class RpiServer(object):
 		self.sendData(wsServer, clientSocket, response)
 		pass
 
+	def taskHandler(self):
+		pass
+
 	def issue_task(self, wsServer, clientSocket, **kwargs):
 		origin = kwargs['origin']
 		destination = kwargs['destination']
 		zone = kwargs['zone']
+		priority = kwargs.get('priority', 3)
 		robot_id = ""
 		package_id = ""
 		task_id = ""
-		priority = 0
 		returnJson = {"functionName": "issue_task", "args": {}}
 		returnJson["args"]["origin"] = origin
 		returnJson["args"]["destination"] = destination
@@ -97,7 +103,7 @@ class RpiServer(object):
 		returnJson["args"]["robot_id"] = robot_id
 		returnJson["args"]["priority"] = priority
 		if(len(self.robotSockets) == 0):
-			self.sendData(wsServer, clientSocket, str(returnJson))
+			self.sendData(wsServer, clientSocket, json.dumps(returnJson))
 			return
 		c = self.databaseConn.cursor()
 		print('Fetching robot_id form db zone:{}'.format(zone))
@@ -109,7 +115,7 @@ class RpiServer(object):
 		print('robot_id: ', robot_id)
 		if(robot_id == None):
 			print('No robot in zone {}'.format(zone))
-			self.sendData(wsServer, clientSocket, str(returnJson))
+			self.sendData(wsServer, clientSocket, json.dumps(returnJson))
 			return
 		returnJson["args"]["robot_id"] = robot_id
 		returnJson["args"]["task_id"] = uuid.uuid4()
@@ -124,7 +130,7 @@ class RpiServer(object):
 			print('Package ID fetched')
 			package_id = c.fetchone()[0]
 			returnJson["args"]["package_id"] = package_id
-		self.sendData(wsServer, clientSocket, str(returnJson))
+		self.sendData(wsServer, clientSocket, json.dumps(returnJson))
 
 		robotSocket = self.robotSockets[int(robot_id)][1]
 		if(origin == 'conv'):
@@ -138,6 +144,7 @@ class RpiServer(object):
 		shelfCoords = self.getCoords(shelf)
 		path = self.getPath(shelfCoords, pickUp)
 		print(path)
+		
 		try:
 			ready_to_read, ready_to_write, in_error = \
 			select.select([robotSocket,], [robotSocket,], [], 5)
@@ -149,9 +156,11 @@ class RpiServer(object):
 			return
 		if(len(ready_to_write) > 0):
 			robotSocket.send(str(path).encode())
-			print('Message sent to robot')
-			response = robotSocket.recv(size)
-			self.sendData(wsServer, clientSocket, ('From robot' + response.decode()))
+			for square in getIntersections(shelfCoords):
+				response = robotSocket.recv(size)
+				robotPositions.append(robot_id,square)
+
+			#self.sendData(wsServer, clientSocket, ('From robot' + response.decode()))
 			return
 		else:
 			robotSocket.close()
@@ -213,6 +222,33 @@ class RpiServer(object):
 		path.append('S')
 		path.append('I')
 		return ''.join(path)
+
+	def getIntersections(self, shelfCoords):
+		intersections = []
+		pointer = 0
+		for i in range(0,shelfCoords[0]):
+			pointer += 10
+			intersections.append(pointer)
+			pointer += 1
+			intersections.append(pointer)
+		pointer += 1
+		intersections.append(pointer)
+		for i in range(1, shelfCoords[1]):
+			pointer += 3
+			intersections.append(pointer)
+		intersections.append(pointer + shelfCoords[2]+1)
+		intersections.append(pointer)
+		for i in range(1,shelfCoords[1]):
+			pointer -= 3
+			intersections.append(pointer)
+		pointer -= 1
+		intersections.append(pointer)
+		for i in range(0,shelfCoords[0]):
+			pointer -= 1
+			intersections.append(pointer)
+			pointer -= 10
+			intersections.append(pointer)
+		return intersections
 
 	def redirectMessage(self, message, server, clientSocket, robotSocket):
 		print('In redirect message')

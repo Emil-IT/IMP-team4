@@ -1,7 +1,7 @@
 import json
 
 def buildZones(connection):
-	
+
 	query = 'select no_aisles, rows_per_aisle, position, site from zone, warehouse where zone.warehouse_id=warehouse.id'
 	cursor = connection.cursor()
 	cursor.execute(query)
