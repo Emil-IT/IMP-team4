@@ -83,31 +83,59 @@ class RpiServer(object):
 		origin = kwargs['origin']
 		destination = kwargs['destination']
 		zone = kwargs['zone']
+		robot_id = ""
+		package_id = ""
+		task_id = ""
+		priority = 0
+		returnJson = {"functionName": "issue_task", "args": {}}
+		returnJson["args"]["origin"] = origin
+		returnJson["args"]["destination"] = destination
+		returnJson["args"]["zone"] = zone
+		returnJson["args"]["task_id"] = task_id
+		returnJson["args"]["package_id"] = package_id
+		returnJson["args"]["robot_id"] = robot_id
+		returnJson["args"]["priority"] = priority
 		if(len(self.robotSockets) == 0):
-			self.sendData(wsServer, clientSocket, '{"functionName": "issue_task", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": "", "robot_id": "", "priority":0} }'.format(origin, destination, zone))
+			self.sendData(wsServer, clientSocket, str(returnJson))
 			return
 		c = self.databaseConn.cursor()
 		print('Fetching robot_id form db zone:{}'.format(zone))
 		query = "select robot_id from zone, warehouse where zone.warehouse_id = warehouse.id and warehouse.site = 'uppsala' and zone.position = {}".format(zone)
+		print('executiong query: {}'.format(query))
 		c.execute(query)
-		robotID = c.fetchone()
-		if(robotID == None):
+		print('query done')
+		robot_id = c.fetchone()[0]
+		print('robot_id: ', robot_id)
+		if(robot_id == None):
 			print('No robot in zone {}'.format(zone))
-			self.sendData(wsServer, clientSocket, '{"functionName": "issue_task", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": "", "robot_id": "", "priority":0} }'.format(origin, destination, zone))
+			self.sendData(wsServer, clientSocket, str(returnJson))
 			return
-		task_id = uuid.uuid4()
+		returnJson["args"]["robot_id"] = robot_id
+		returnJson["args"]["task_id"] = uuid.uuid4()
+		print('Added ids')
 		if(origin == "conv"):
-			package_id = uuid.uuid4()
+			returnJson["args"]["package_id"] = uuid.uuid4()
 		else:
-			c.execute("select package_id from shelf, warehouse where shelf.warehouse_id = warehouse.id and warehouse.site = 'uppsala' and shelf.name = ?", int(origin))
-			package_id = c.fetchone()
-		self.sendData(wsServer, clientSocket, '{"functionName": "issue_task", "args": {"origin":{}, "destination": {}, "zone": {}, "task_id": "", "package_id": {}, "robot_id": "", "priority":0} }'.format(origin, destination, zone, package_id))
+			print('Fetching package ID')
+			query = "select package_id from shelf, warehouse where shelf.warehouse_id = warehouse.id and warehouse.site = 'uppsala' and shelf.name = '{}'".format(str(origin))
+			print('executing query: {}'.format(query))
+			c.execute(query)
+			print('Package ID fetched')
+			package_id = c.fetchone()[0]
+			returnJson["args"]["package_id"] = package_id
+		self.sendData(wsServer, clientSocket, str(returnJson))
 
-
-		print('RobotID: {}'.format(robotID))
-		robotSocket = self.robotSockets[int(kwargs['robotID'])][1]
-		shelfCoords = self.getCoords(kwargs['shelfID'])
-		path = self.getPath(shelfCoords, kwargs['pickUp'])
+		robotSocket = self.robotSockets[int(robot_id)][1]
+		if(origin == 'conv'):
+			shelf = destination
+			pickUp = 0
+		elif(destination == 'conv'):
+			shelf = origin
+			pickUp = 1
+		else:
+			pass #Not yet implemented
+		shelfCoords = self.getCoords(shelf)
+		path = self.getPath(shelfCoords, pickUp)
 		try:
 			ready_to_read, ready_to_write, in_error = \
 			select.select([robotSocket,], [robotSocket,], [], 5)
@@ -139,48 +167,48 @@ class RpiServer(object):
 		return shelfCoords
 
 	def getPath(self, shelfCoords, pickUp):
-		path = ['task']
+		path = []
 		if(not pickUp):
-			path.append('turn')
-			path.append('pick up')
-			path.append('turn')
+			path.append('S')
+			path.append('P')
+			path.append('S')
 		if(shelfCoords[0] > 0):
-			path.append('right')
+			path.append('R')
 			for i in range(0, shelfCoords[0]):
-				path.append('forward')
-			path.append('left')
+				path.append('F')
+			path.append('L')
 		for i in range(0, shelfCoords[1]):
-			path.append('forward')
+			path.append('F')
 		if(shelfCoords[2] == 1):
-			path.append('right')
+			path.append('R')
 		else:
-			path.append('left')
-		path.append('forward')
+			path.append('L')
+		path.append('F')
 		for i in range(0, shelfCoords[3]):
-			path.append('lift')
+			path.append('U')
 		if(pickUp):
-			path.append('pick up')
+			path.append('P')
 		else:
-			path.append('drop off')
-		path.append('turn')
+			path.append('d')
+		path.append('S')
 		for i in range(0, shelfCoords[3]):
-			path.append('lower')
-		path.append('forward')
+			path.append('D')
+		path.append('F')
 		if(shelfCoords[2] == 0):
-			path.append('right')
+			path.append('R')
 		else:
-			path.append('left')
+			path.append('L')
 		for i in range(0, shelfCoords[1]):
-			path.append('forward')
+			path.append('F')
 		if(shelfCoords[0] > 0):
-			path.append('right')
+			path.append('R')
 			for i in range(0, shelfCoords[0]):
-				path.append('forward')
-			path.append('left')
+				path.append('F')
+			path.append('L')
 		if(pickUp):
-			path.append('drop off')
-		path.append('turn')
-		return path
+			path.append('d')
+		path.append('S')
+		return ''.join(path)
 
 	def redirectMessage(self, message, server, clientSocket, robotSocket):
 		print('In redirect message')
