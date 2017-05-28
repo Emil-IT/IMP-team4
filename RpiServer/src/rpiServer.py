@@ -148,11 +148,11 @@ class RpiServer(object):
 			robotSocket.send(str(path).encode())
 			print('Message sent to robot')
 			response = robotSocket.recv(size)
-			self.sendData(wsServer, clientSocket, response.decode())
+			self.sendData(wsServer, clientSocket, ('From robot' + response).decode())
 			return
 		else:
 			robotSocket.close()
-			robotSockets.pop(int(kwargs['robotID']))
+			robotSockets.pop(int(robot_id))
 		self.sendData(wsServer, clientSocket, 'Lost connection to robot')
 
 
