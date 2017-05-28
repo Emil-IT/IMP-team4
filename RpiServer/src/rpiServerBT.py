@@ -50,7 +50,7 @@ class RpiServerBT():
 				print("Waiting for connection on port %d" % port)
 				clientSocket, clientInfo = serverSocket.accept()
 				print("Accepted connection from ", clientInfo)
-				clientSocket.sendall('Welcome to the server'.encode())
+				clientSocket.sendall('Connected'.encode())
 				robot_id = int(clientSocket.recv(size))
 				print('Adding robot {} to list'.format(robot_id))
 				self.parent.robotSockets.append((robot_id, clientSocket))
