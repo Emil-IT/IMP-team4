@@ -1,3 +1,5 @@
+import json
+
 def buildZones(connection):
 	
 	query = 'select no_aisles, rows_per_aisle, position, site from zone, warehouse where zone.warehouse_id=warehouse.id'
@@ -27,8 +29,24 @@ def buildZones(connection):
 	zonesJSON += ']'
 	return zonesJSON
 	
-def buildRobots(connection):
-	return '"robots":[{"zone": "uppsala0","id": "12345","position": 2}]'
+def buildRobots(connection, positions):
+	
+	robotsJSON = '"robots":['
+	position = 0
+	cursor = connection.cursor()
+	query = 'select warehouse.site, robot.id, zone.position from warehouse, zone, robot where robot.id=zone.robot_id and zone.warehouse_id=warehouse.id'
+	cursor.execute(query)
+	result = cursor.fetchall()
+	for each in result:
+		zone = "%s%d"%(each[0], each[2])
+		id = (each[1])
+		for pos in positions:
+			if (pos[0] == each[1]):
+				position = (pos[1])
+		robotsJSON += (json.dumps({"zone":zone, "id":id, "position":position}) + ',')
+	robotsJSON = robotsJSON[:-1] + ']'
+	print(robotsJSON)
+	return robotsJSON #'"robots":[{"zone": "uppsala0","id": "12345","position": '+position.+'}]'
 
 def buildPackages(connection):
 	return '"packages":[{"id":"44421","position":"Conv","carrying":1},{"id":"44532","position":"A3","carrying":0},{"id":"44514","position":"A2","carrying":0}]'

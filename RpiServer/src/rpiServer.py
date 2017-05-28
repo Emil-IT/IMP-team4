@@ -23,6 +23,7 @@ class RpiServer(object):
 	clientSockets = []
 	robotSockets = []
 	callbackQueue = queue.Queue()
+	robotPositions = []
 
 	sensorJSON = ''
 	databaseConn = sqlite3.connect('../db/warehouses.db')
@@ -70,7 +71,7 @@ class RpiServer(object):
 	def get_data(self, wsServer, clientSocket):
 		#zones
 		zonesJSON = jsonBuilder.buildZones(self.databaseConn)
-		robotsJSON = jsonBuilder.buildRobots(self.databaseConn)
+		robotsJSON = jsonBuilder.buildRobots(self.databaseConn, self.robotPositions)
 		packagesJSON = jsonBuilder.buildPackages(self.databaseConn)
 		tasksJSON = jsonBuilder.buildTasks(self.databaseConn)
 		warehouseJSON = '{'+zonesJSON+','+robotsJSON+','+packagesJSON+','+tasksJSON+'}'
@@ -136,6 +137,7 @@ class RpiServer(object):
 			pass #Not yet implemented
 		shelfCoords = self.getCoords(shelf)
 		path = self.getPath(shelfCoords, pickUp)
+		print(path)
 		try:
 			ready_to_read, ready_to_write, in_error = \
 			select.select([robotSocket,], [robotSocket,], [], 5)
@@ -149,7 +151,7 @@ class RpiServer(object):
 			robotSocket.send(str(path).encode())
 			print('Message sent to robot')
 			response = robotSocket.recv(size)
-			self.sendData(wsServer, clientSocket, ('From robot' + response).decode())
+			self.sendData(wsServer, clientSocket, ('From robot' + response.decode()))
 			return
 		else:
 			robotSocket.close()
@@ -191,6 +193,7 @@ class RpiServer(object):
 		else:
 			path.append('d')
 		path.append('S')
+		path.append('I')
 		for i in range(0, shelfCoords[3]):
 			path.append('D')
 		path.append('F')
@@ -208,6 +211,7 @@ class RpiServer(object):
 		if(pickUp):
 			path.append('d')
 		path.append('S')
+		path.append('I')
 		return ''.join(path)
 
 	def redirectMessage(self, message, server, clientSocket, robotSocket):
