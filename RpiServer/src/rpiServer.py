@@ -11,6 +11,7 @@ import json
 import sqlite3
 import jsonBuilder
 import uuid
+import time
 
 
 local = 'localhost'
@@ -21,9 +22,9 @@ class RpiServer(object):
 	"""docstring for ClassName"""
 	server = None
 	clientSockets = []
-	robotSockets = []
+	robotSockets = {}
 	callbackQueue = queue.Queue()
-	robotPositions = []
+	robotPositions = {}
 
 	sensorJSON = ''
 	databaseConn = sqlite3.connect('../db/warehouses.db')
@@ -50,7 +51,7 @@ class RpiServer(object):
 
 	def listenToChildren(self):
 		while True:
-			print('Ready to listen to children')
+			#print('Ready to listen to children')
 			try:
 				item = self.callbackQueue.get()
 				jsonData = item[0]
@@ -59,7 +60,9 @@ class RpiServer(object):
 					data = json.loads(jsonData)
 					if(hasattr(self, data['functionName'])):
 						print('Calling requested function')
-						getattr(self, data['functionName'], None)(item[1], item[2], **(data['args']))
+						t = threading.Thread(target = getattr(self, data['functionName'], None), args = (item[1], item[2]), kwargs = data['args'])
+						t.start()
+						#print('Hello from the main thread')
 						self.callbackQueue.task_done()
 					else:
 						print('no such function')
@@ -72,11 +75,12 @@ class RpiServer(object):
 
 
 	def get_data(self, wsServer, clientSocket):
+		databaseConn = sqlite3.connect('../db/warehouses.db')
 		#zones
-		zonesJSON = jsonBuilder.buildZones(self.databaseConn)
-		robotsJSON = jsonBuilder.buildRobots(self.databaseConn, self.robotPositions)
-		packagesJSON = jsonBuilder.buildPackages(self.databaseConn)
-		tasksJSON = jsonBuilder.buildTasks(self.databaseConn)
+		zonesJSON = jsonBuilder.buildZones(databaseConn)
+		robotsJSON = jsonBuilder.buildRobots(databaseConn, self.robotPositions)
+		packagesJSON = jsonBuilder.buildPackages(databaseConn)
+		tasksJSON = jsonBuilder.buildTasks(databaseConn)
 		warehouseJSON = '{'+zonesJSON+','+robotsJSON+','+packagesJSON+','+tasksJSON+'}'
 		#print(warehouseJSON)
 		response = '{"functionName":"get_data","args":'+warehouseJSON+'}'
@@ -87,6 +91,7 @@ class RpiServer(object):
 		pass
 
 	def issue_task(self, wsServer, clientSocket, **kwargs):
+		databaseConn = sqlite3.connect('../db/warehouses.db')
 		origin = kwargs['origin']
 		destination = kwargs['destination']
 		zone = kwargs['zone']
@@ -105,7 +110,7 @@ class RpiServer(object):
 		if(len(self.robotSockets) == 0):
 			self.sendData(wsServer, clientSocket, json.dumps(returnJson))
 			return
-		c = self.databaseConn.cursor()
+		c = databaseConn.cursor()
 		print('Fetching robot_id form db zone:{}'.format(zone))
 		query = "select robot_id from zone, warehouse where zone.warehouse_id = warehouse.id and warehouse.site = 'uppsala' and zone.position = {}".format(zone)
 		print('executiong query: {}'.format(query))
@@ -132,7 +137,8 @@ class RpiServer(object):
 			returnJson["args"]["package_id"] = package_id
 		self.sendData(wsServer, clientSocket, json.dumps(returnJson))
 
-		robotSocket = self.robotSockets[int(robot_id)][1]
+		#print(self.robotSockets)
+		robotSocket = self.robotSockets[int(robot_id)]
 		if(origin == 'conv'):
 			shelf = destination
 			pickUp = 0
@@ -144,7 +150,7 @@ class RpiServer(object):
 		shelfCoords = self.getCoords(shelf)
 		path = self.getPath(shelfCoords, pickUp)
 		print(path)
-		
+
 		try:
 			ready_to_read, ready_to_write, in_error = \
 			select.select([robotSocket,], [robotSocket,], [], 5)
@@ -156,11 +162,13 @@ class RpiServer(object):
 			return
 		if(len(ready_to_write) > 0):
 			robotSocket.send(str(path).encode())
-			for square in getIntersections(shelfCoords):
+			for square in self.getIntersections(shelfCoords):
+				print('Pos: ', square)
 				response = robotSocket.recv(size)
-				robotPositions.append(robot_id,square)
+				self.robotPositions[robot_id] = square
 
 			#self.sendData(wsServer, clientSocket, ('From robot' + response.decode()))
+			print('Task_done')
 			return
 		else:
 			robotSocket.close()
@@ -186,7 +194,7 @@ class RpiServer(object):
 		if(shelfCoords[0] > 0):
 			path.append('R')
 			for i in range(0, shelfCoords[0]):
-				path.append('F')
+				path.append('FF')
 			path.append('L')
 		for i in range(0, shelfCoords[1]):
 			path.append('F')
@@ -215,7 +223,7 @@ class RpiServer(object):
 		if(shelfCoords[0] > 0):
 			path.append('R')
 			for i in range(0, shelfCoords[0]):
-				path.append('F')
+				path.append('FF')
 			path.append('L')
 		if(pickUp):
 			path.append('d')

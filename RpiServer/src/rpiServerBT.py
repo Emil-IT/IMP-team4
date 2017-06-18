@@ -57,7 +57,7 @@ class RpiServerBT():
 				robot_id = response.decode()
 				robot_id = robot_id[0]
 				print('Adding robot {} to list'.format(robot_id))
-				self.parent.robotSockets.append((robot_id, clientSocket))
+				self.parent.robotSockets[int(robot_id)] =  clientSocket
 		finally:
 			return
 
