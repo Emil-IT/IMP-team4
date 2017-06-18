@@ -39,17 +39,18 @@ def buildRobots(connection, positions):
 	result = cursor.fetchall()
 	for each in result:
 		zone = "%s%d"%(each[0], each[2])
-		id = (each[1])
-		for pos in positions:
-			if (pos[0] == each[1]):
-				position = (pos[1])
+		id = each[1]
+		if(id in positions):
+			position = positions[id]
+		else:
+			position = 0
 		robotsJSON += (json.dumps({"zone":zone, "id":id, "position":position}) + ',')
 	robotsJSON = robotsJSON[:-1] + ']'
 	print(robotsJSON)
-	return robotsJSON #'"robots":[{"zone": "uppsala0","id": "12345","position": '+position.+'}]'
+	return robotsJSON #'"robots":[{"zone": "uppsala0","id": "12345","position": '+position.+'}][{0:1},{1:5}]'
 
 def buildPackages(connection):
-	return '"packages":[{"id":"44421","position":"Conv","carrying":1},{"id":"44532","position":"A3","carrying":0},{"id":"44514","position":"A2","carrying":0}]'
+	return '"packages":[{"id":"44421","position":"Conv","carrying":1, "zone":"hanoi0"},{"id":"44532","position":"A3","carrying":0, "zone":"uppsala0"},{"id":"44514","position":"A2","carrying":0, "zone":"uppsala0"}]'
 
 def buildTasks(connection):
 	return '"tasks":[{"task_id":"1234","package_id":"44532","robot_id":"12345","priority":1,"drop_off":"A2","status":1},{"task_id":"1235","package_id":"44421","robot_id":"12345","priority":2,"drop_off":"Conv","status":0}]'
